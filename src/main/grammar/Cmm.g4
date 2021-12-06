@@ -170,13 +170,13 @@ size :
 append :
     APPEND LPAR expression COMMA expression RPAR;
 
-//todo
-value :
-    boolValue | INT_VALUE;
+value returns[Value val]:
+    b=boolValue {$val = bv.val} |
+    i=INT_VALUE {$val = new IntValue(Integer.parseInt($i.text))};
 
-//todo
-boolValue:
-    TRUE | FALSE;
+boolValue returns[Value val]:
+    TRUE {$val = new BoolValue(True);} |
+    FALSE {$val = new BoolValue(False);};
 
 identifier returns[Identifier ID]:
     name=IDENTIFIER {$ID = new Identifier($name.text);};
