@@ -3036,7 +3036,7 @@ public class CmmParser extends Parser {
 				setState(478);
 				((PreUnaryExpressionContext)_localctx).e1 = preUnaryExpression();
 
-				        ((PreUnaryExpressionContext)_localctx).exp =  new UnaryExpression(UnaryOperator.not);
+				        ((PreUnaryExpressionContext)_localctx).exp =  new UnaryExpression(((PreUnaryExpressionContext)_localctx).e1.exp, UnaryOperator.not);
 				        _localctx.exp.setLine((((PreUnaryExpressionContext)_localctx).op_not!=null?((PreUnaryExpressionContext)_localctx).op_not.getLine():0));
 				    
 				}
@@ -3051,7 +3051,7 @@ public class CmmParser extends Parser {
 				setState(482);
 				((PreUnaryExpressionContext)_localctx).e2 = preUnaryExpression();
 
-				        ((PreUnaryExpressionContext)_localctx).exp =  new UnaryExpression(UnaryOperator.minus);
+				        ((PreUnaryExpressionContext)_localctx).exp =  new UnaryExpression(((PreUnaryExpressionContext)_localctx).e2.exp, UnaryOperator.minus);
 				        _localctx.exp.setLine((((PreUnaryExpressionContext)_localctx).op_minus!=null?((PreUnaryExpressionContext)_localctx).op_minus.getLine():0));
 				    
 				}
@@ -3168,7 +3168,7 @@ public class CmmParser extends Parser {
 			setState(490);
 			((AccessExpressionContext)_localctx).e1 = otherExpression();
 
-			        ((AccessExpressionContext)_localctx).exp =  e1.exp;
+			        ((AccessExpressionContext)_localctx).exp =  ((AccessExpressionContext)_localctx).e1.exp;
 			    
 			setState(503);
 			_errHandler.sync(this);
@@ -3336,7 +3336,7 @@ public class CmmParser extends Parser {
 				setState(520);
 				((OtherExpressionContext)_localctx).e1 = value();
 
-				        ((OtherExpressionContext)_localctx).exp =  e1.val;
+				        ((OtherExpressionContext)_localctx).exp =  ((OtherExpressionContext)_localctx).e1.val;
 				    
 				}
 				break;
@@ -3346,7 +3346,7 @@ public class CmmParser extends Parser {
 				setState(523);
 				((OtherExpressionContext)_localctx).e2 = identifier();
 
-				        ((OtherExpressionContext)_localctx).exp =  e2.ID;
+				        ((OtherExpressionContext)_localctx).exp =  ((OtherExpressionContext)_localctx).e2.ID;
 				    
 				}
 				break;
@@ -3571,7 +3571,7 @@ public class CmmParser extends Parser {
 				{
 				setState(553);
 				((ValueContext)_localctx).b = boolValue();
-				_localctx.val = b.val
+				((ValueContext)_localctx).val =  ((ValueContext)_localctx).b.val;
 				}
 				break;
 			case INT_VALUE:
@@ -3579,7 +3579,7 @@ public class CmmParser extends Parser {
 				{
 				setState(556);
 				((ValueContext)_localctx).i = match(INT_VALUE);
-				_localctx.val = new IntValue(Integer.parseInt((((ValueContext)_localctx).i!=null?((ValueContext)_localctx).i.getText():null)))
+				((ValueContext)_localctx).val =  new IntValue(Integer.parseInt((((ValueContext)_localctx).i!=null?((ValueContext)_localctx).i.getText():null)));
 				}
 				break;
 			default:
@@ -3632,7 +3632,7 @@ public class CmmParser extends Parser {
 				{
 				setState(560);
 				match(TRUE);
-				((BoolValueContext)_localctx).val =  new BoolValue(True);
+				((BoolValueContext)_localctx).val =  new BoolValue(true);
 				}
 				break;
 			case FALSE:
@@ -3640,7 +3640,7 @@ public class CmmParser extends Parser {
 				{
 				setState(562);
 				match(FALSE);
-				((BoolValueContext)_localctx).val =  new BoolValue(False);
+				((BoolValueContext)_localctx).val =  new BoolValue(false);
 				}
 				break;
 			default:

@@ -193,10 +193,10 @@ multiplicativeExpression returns[Expression exp]:
 
 preUnaryExpression returns[Expression exp]:
     (op_not=NOT e1=preUnaryExpression {
-        $exp = new UnaryExpression(UnaryOperator.not);
+        $exp = new UnaryExpression($e1.exp, UnaryOperator.not);
         $exp.setLine($op_not.line);
     }) | (op_minus=MINUS e2=preUnaryExpression {
-        $exp = new UnaryExpression(UnaryOperator.minus);
+        $exp = new UnaryExpression($e2.exp, UnaryOperator.minus);
         $exp.setLine($op_minus.line);
     }) | e3=accessExpression {
         $exp = $e3.exp;
@@ -204,7 +204,7 @@ preUnaryExpression returns[Expression exp]:
 
 accessExpression returns[Expression exp]:
     e1=otherExpression {
-        $exp = e1.exp;
+        $exp = $e1.exp;
     } ((LPAR args=functionArguments RPAR {
         $exp = new FunctionCall($exp, $args.args);
         $exp.setLine($LPAR.line);
@@ -221,9 +221,9 @@ accessExpression returns[Expression exp]:
 
 otherExpression returns[Expression exp]:
     e1=value {
-        $exp = e1.val;
+        $exp = $e1.val;
     } | e2=identifier {
-        $exp = e2.ID;
+        $exp = $e2.ID;
     } | LPAR (args=functionArguments) RPAR {
         $exp = new ExprInPar($args.args);
         $exp.setLine($LPAR.line);
@@ -247,12 +247,12 @@ append returns[Expression exp]:
     };
 
 value returns[Value val]:
-    b=boolValue {$val = b.val} |
-    i=INT_VALUE {$val = new IntValue(Integer.parseInt($i.text))};
+    b=boolValue {$val = $b.val;} |
+    i=INT_VALUE {$val = new IntValue(Integer.parseInt($i.text));};
 
 boolValue returns[Value val]:
-    TRUE {$val = new BoolValue(True);} |
-    FALSE {$val = new BoolValue(False);};
+    TRUE {$val = new BoolValue(true);} |
+    FALSE {$val = new BoolValue(false);};
 
 identifier returns[Identifier ID]:
     name=IDENTIFIER {$ID = new Identifier($name.text);};
