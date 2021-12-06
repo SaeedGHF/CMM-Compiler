@@ -21,7 +21,6 @@ program returns[Program programRet]:
     {$programRet = new Program();
      int line = 1;
      $programRet.setLine(line);}
-    {System.out.println("cmm");}
     (s = structDeclaration {$programRet.addStruct($s.structDeclarationRet);})*
     (f = functionDeclaration {$programRet.addFunction($f.functionDeclarationRet);})*
     m = main {$programRet.setMain($m.mainRet);};
@@ -182,29 +181,33 @@ boolValue:
 identifier returns[Identifier ID]:
     name=IDENTIFIER {$ID = new Identifier($name.text);};
 
-type returns[Type typeRet]:
-    INT {$typeRet = new IntType();} |
-    BOOL {$typeRet = new BoolType();} |
-    LIST SHARP listType=type {$typeRet = new ListType($listType);} |
-    STRUCT structID=identifier {$typeRet = new StructType($structID);} |
-    fptr=fptrType {$typeRet = $fptr;};
+type returns[Type varType]:
+    INT {$varType = new IntType();} |
+    BOOL {$varType = new BoolType();} |
+    LIST SHARP listType=type {$varType = new ListType($listType.varType);} |
+    STRUCT structID=identifier {$varType = new StructType($structID.ID);} |
+    fptr=fptrType {$varType = $fptr.fptr;};
 
 fptrType returns[Type fptr]:
     {
-        $fptr = new FptrType();
         ArrayList<Type> argsType = new ArrayList<Type>();
+        Type retType;
     }
     FPTR LESS_THAN (VOID {
-        $fptr.addArgType(new VoidType());
+        Type vt = new VoidType();
+        argsType.add(vt);
     } | (firstType=type {
-        $fptr.addArgType($firstType);
+        argsType.add($firstType.varType);
     } (COMMA tp=type {
-        $fptr.addArgType($tp);
+        argsType.add($tp.varType);
     })*)) ARROW (retType=type {
-        $fptr.setReturnType($retType);
+        retType = $retType.varType;
     } | retVoid=VOID {
-        $fptr.setReturnType(new VoidType());
-    }) GREATER_THAN;
+        retType = new VoidType();
+    }) GREATER_THAN
+    {
+        $fptr = new FptrType(argsType, retType);
+    };
 
 MAIN: 'main';
 RETURN: 'return';
