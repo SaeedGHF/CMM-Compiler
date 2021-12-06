@@ -70,11 +70,11 @@ functionArguments returns[ArrayList<Expression> args]: {
     })*)?;
 
 //todo
-body :
+body returns[BlockStmt bodystmt]:
      (blockStatement | (NEWLINE+ singleStatement (SEMICOLON)?));
 
 //todo
-loopCondBody :
+loopCondBody returns[BlockStmt loopCond]:
      (blockStatement | (NEWLINE+ singleStatement ));
 
 //todo
@@ -94,35 +94,75 @@ returnStatement :
     RETURN (expression)?;
 
 //todo
-ifStatement :
-    IF expression (loopCondBody | body elseStatement);
+ifStatement returns[ConditionalStmt ifStmt]:
+    ifLine = IF
+    ex1 = expression
+//    {
+//        $ifStmt = new ConditionalStmt($ex1.exp);
+//        $ifStmt.setLine($ifLine.getLine());
+//    }
+    (loopCondBody | body elseStatement);
 
 //todo
-elseStatement :
-     NEWLINE* ELSE loopCondBody;
+elseStatement returns [Statement elseStmt] :
+     NEWLINE*
+     elseLine = ELSE lpcond = loopCondBody
+     {
+//        $elseStmt = $lpcond.loopCond;
+//        $elseStmt.setLine($elseLine.getLine());
+     };
 
 //todo
 loopStatement :
     whileLoopStatement | doWhileLoopStatement;
 
-//todo
-whileLoopStatement :
-    WHILE expression loopCondBody;
+//not sure for while condition
+whileLoopStatement returns[LoopStmt whilestmt]:
+    whLine = WHILE ex1 = expression lpbdy = loopCondBody
+    {
+        $whilestmt = new LoopStmt();
+//        ConditionalStmt cond1 = new ConditionalStmt($ex1.exp);
+        $whilestmt.setCondition($ex1.exp);
+        $whilestmt.setBody($lpbdy.loopCond);
+        $whilestmt.setLine($whLine.getLine());
+    };
 
-//todo
-doWhileLoopStatement :
-    DO body NEWLINE* WHILE expression;
 
-//todo
-displayStatement :
-  DISPLAY LPAR expression RPAR;
+doWhileLoopStatement returns[LoopStmt dowhile]:
+    doLine = DO bd1 = body
+    {
+        $dowhile = new LoopStmt();
+        $dowhile.setBody($bd1.bodystmt);
+        $dowhile.setLine($doLine.getLine());
+    }
+    NEWLINE*
+    whLine = WHILE ex2 = expression
+    {
+//        ConditionalStmt cond1 = new ConditionalStmt($ex2.exp);
+        $dowhile.setCondition($ex2.exp);
 
-//todo
-assignmentStatement :
-    orExpression ASSIGN expression;
+    };
+
+
+displayStatement returns [DisplayStmt display] :
+  disLine = DISPLAY LPAR ex1 = expression
+  {
+    $display = new DisplayStmt($ex1.exp);
+    $display.setLine($disLine.getLine());
+  }
+  RPAR;
+
+
+assignmentStatement returns [AssignmentStmt assign]:
+    orexp = orExpression assingLine = ASSIGN ex1 = expression
+    {
+        $assign = new AssignmentStmt($orexp.exp, $ex1.exp);
+        $assign.setLine($assingLine.getLine());
+    };
 
 //todo
 singleStatement :
+// returns [Statement singlestmt]
     ifStatement | displayStatement | functionCallStmt | returnStatement | assignmentStatement
     | varDecStatement | loopStatement | append | size;
 
@@ -207,13 +247,13 @@ accessExpression returns[Expression exp]:
         $exp = $e1.exp;
     } ((LPAR args=functionArguments RPAR {
         $exp = new FunctionCall($exp, $args.args);
-        $exp.setLine($LPAR.line);
+//        $exp.setLine($LPAR.line);
     }) | (DOT id=identifier {
         $exp = new StructAccess($exp, $id.ID);
         $exp.setLine($DOT.line);
     }))* ((LBRACK e2=expression RBRACK {
         $exp = new ListAccessByIndex($exp, $e2.exp);
-        $exp.setLine($LBRACK.line);
+//        $exp.setLine($LBRACK.line);
     }) | (DOT id=identifier {
         $exp = new StructAccess($exp, $id.ID);
         $exp.setLine($DOT.line);
@@ -226,7 +266,7 @@ otherExpression returns[Expression exp]:
         $exp = $e2.ID;
     } | LPAR (args=functionArguments) RPAR {
         $exp = new ExprInPar($args.args);
-        $exp.setLine($LPAR.line);
+//        $exp.setLine($LPAR.line);
     } | size {
         $exp = $size.exp;
     } | append {
@@ -234,16 +274,16 @@ otherExpression returns[Expression exp]:
     };
 
 size returns[Expression exp]:
-    SIZE LPAR e1=expression RPAR {
+    sizeLine = SIZE LPAR e1=expression RPAR {
         $exp = new ListSize($e1.exp);
-        $exp.setLine($LPAR.line);
+        $exp.setLine($sizeLine.line);
     };
 
 append returns[Expression exp]:
-    APPEND LPAR e1=expression COMMA e2=expression RPAR
+    appendLine = APPEND LPAR e1=expression COMMA e2=expression RPAR
     {
         $exp = new ListAppend($e1.exp, $e2.exp);
-        $exp.setLine($APPEND.getLine());
+        $exp.setLine($appendLine.getLine());
     };
 
 value returns[Value val]:
