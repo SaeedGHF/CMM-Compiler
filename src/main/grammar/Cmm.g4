@@ -61,9 +61,13 @@ functionDeclaration returns[FunctionDeclaration functionDeclarationRet]:
 functionArgsDec :
     LPAR (type identifier (COMMA type identifier)*)? RPAR ;
 
-//todo
-functionArguments :
-    (expression (COMMA expression)*)?;
+functionArguments returns[ArrayList<Expression> args]: {
+        $args = new ArrayList<Expression>();
+    } (e1=expression {
+        $args.add($e1.exp);
+    } (COMMA e2=expression {
+        $args.add($e2.exp);
+    })*)?;
 
 //todo
 body :
@@ -122,53 +126,125 @@ singleStatement :
     ifStatement | displayStatement | functionCallStmt | returnStatement | assignmentStatement
     | varDecStatement | loopStatement | append | size;
 
-//todo
-expression:
-    orExpression (op = ASSIGN expression )? ;
+expression returns[Expression exp]:
+    e1=orExpression {
+        $exp = $e1.exp;
+    } (op = ASSIGN e2=expression {
+        $exp = new BinaryExpression($exp, $e2.exp, BinaryOperator.assign);
+        $exp.setLine($op.line);
+    })?;
 
-//todo
-orExpression:
-    andExpression (op = OR andExpression )*;
+orExpression returns[Expression exp]:
+    e1=andExpression {
+        $exp = $e1.exp;
+    } (op = OR e2=andExpression {
+        $exp = new BinaryExpression($exp, $e2.exp, BinaryOperator.or);
+        $exp.setLine($op.line);
+    })*;
 
-//todo
-andExpression:
-    equalityExpression (op = AND equalityExpression )*;
+andExpression returns[Expression exp]:
+    e1=equalityExpression {
+        $exp = $e1.exp;
+    } (op = AND e2=equalityExpression {
+        $exp = new BinaryExpression($exp, $e2.exp, BinaryOperator.and);
+        $exp.setLine($op.line);
+    })*;
 
-//todo
-equalityExpression:
-    relationalExpression (op = EQUAL relationalExpression )*;
+equalityExpression returns[Expression exp]:
+    e1=relationalExpression {
+        $exp = $e1.exp;
+    } (op = EQUAL e2=relationalExpression {
+        $exp = new BinaryExpression($exp, $e2.exp, BinaryOperator.eq);
+        $exp.setLine($op.line);
+    })*;
 
-//todo
-relationalExpression:
-    additiveExpression ((op = GREATER_THAN | op = LESS_THAN) additiveExpression )*;
+relationalExpression returns[Expression exp]:
+    e1=additiveExpression {
+        $exp = $e1.exp;
+    } ((op_gt = GREATER_THAN e2=additiveExpression {
+        $exp = new BinaryExpression($exp, $e2.exp, BinaryOperator.gt);
+        $exp.setLine($op_gt.line);
+    }) | (op_lt = LESS_THAN e3=additiveExpression {
+        $exp = new BinaryExpression($exp, $e3.exp, BinaryOperator.lt);
+        $exp.setLine($op_lt.line);
+    }))*;
 
-//todo
-additiveExpression:
-    multiplicativeExpression ((op = PLUS | op = MINUS) multiplicativeExpression )*;
+additiveExpression returns[Expression exp]:
+    e1=multiplicativeExpression {
+        $exp = $e1.exp;
+    } ((op_plus = PLUS e2=multiplicativeExpression {
+        $exp = new BinaryExpression($exp, $e2.exp, BinaryOperator.add);
+        $exp.setLine($op_plus.line);
+    }) | (op_minus = MINUS e3=multiplicativeExpression {
+        $exp = new BinaryExpression($exp, $e3.exp, BinaryOperator.sub);
+        $exp.setLine($op_minus.line);
+    }))*;
 
-//todo
-multiplicativeExpression:
-    preUnaryExpression ((op = MULT | op = DIVIDE) preUnaryExpression )*;
+multiplicativeExpression returns[Expression exp]:
+    e1=preUnaryExpression {
+        $exp = $e1.exp;
+    } ((op_mult = MULT e2=preUnaryExpression {
+        $exp = new BinaryExpression($exp, $e2.exp, BinaryOperator.mult);
+        $exp.setLine($op_mult.line);
+    }) | (op_div = DIVIDE e3=preUnaryExpression {
+        $exp = new BinaryExpression($exp, $e3.exp, BinaryOperator.div);
+        $exp.setLine($op_div.line);
+    }))*;
 
-//todo
-preUnaryExpression:
-    ((op = NOT | op = MINUS) preUnaryExpression ) | accessExpression;
+preUnaryExpression returns[Expression exp]:
+    (op_not=NOT e1=preUnaryExpression {
+        $exp = new UnaryExpression(UnaryOperator.not);
+        $exp.setLine($op_not.line);
+    }) | (op_minus=MINUS e2=preUnaryExpression {
+        $exp = new UnaryExpression(UnaryOperator.minus);
+        $exp.setLine($op_minus.line);
+    }) | e3=accessExpression {
+        $exp = $e3.exp;
+    };
 
-//todo
-accessExpression:
-    otherExpression ((LPAR functionArguments RPAR) | (DOT identifier))*  ((LBRACK expression RBRACK) | (DOT identifier))*;
+accessExpression returns[Expression exp]:
+    e1=otherExpression {
+        $exp = e1.exp;
+    } ((LPAR args=functionArguments RPAR {
+        $exp = new FunctionCall($exp, $args.args);
+        $exp.setLine($LPAR.line);
+    }) | (DOT id=identifier {
+        $exp = new StructAccess($exp, $id.ID);
+        $exp.setLine($DOT.line);
+    }))* ((LBRACK e2=expression RBRACK {
+        $exp = new ListAccessByIndex($exp, $e2.exp);
+        $exp.setLine($LBRACK.line);
+    }) | (DOT id=identifier {
+        $exp = new StructAccess($exp, $id.ID);
+        $exp.setLine($DOT.line);
+    }))*;
 
-//todo
-otherExpression:
-    value | identifier | LPAR (functionArguments) RPAR | size | append ;
+otherExpression returns[Expression exp]:
+    e1=value {
+        $exp = e1.val;
+    } | e2=identifier {
+        $exp = e2.ID;
+    } | LPAR (args=functionArguments) RPAR {
+        $exp = new ExprInPar($args.args);
+        $exp.setLine($LPAR.line);
+    } | size {
+        $exp = $size.exp;
+    } | append {
+        $exp = $append.exp;
+    };
 
-//todo
-size :
-    SIZE LPAR expression RPAR;
+size returns[Expression exp]:
+    SIZE LPAR e1=expression RPAR {
+        $exp = new ListSize($e1.exp);
+        $exp.setLine($LPAR.line);
+    };
 
-//todo
-append :
-    APPEND LPAR expression COMMA expression RPAR;
+append returns[Expression exp]:
+    APPEND LPAR e1=expression COMMA e2=expression RPAR
+    {
+        $exp = new ListAppend($e1.exp, $e2.exp);
+        $exp.setLine($APPEND.line);
+    };
 
 value returns[Value val]:
     b=boolValue {$val = b.val} |
