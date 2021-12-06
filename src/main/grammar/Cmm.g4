@@ -61,6 +61,7 @@ functionDeclaration returns[FunctionDeclaration functionDeclarationRet]:
 functionArgsDec :
     LPAR (type identifier (COMMA type identifier)*)? RPAR ;
 
+<<<<<<< HEAD
 functionArguments returns[ArrayList<Expression> args]:
     {$args = new ArrayList<Expression>();}
     (expression {$args.add($expression.exp);} (COMMA expression {$args.add($expression.exp);})*)?;
@@ -104,6 +105,58 @@ varDecStatement returns[Statement stmt]:
     })? {
         $stmt.addVar(varDec_);
     })*;
+=======
+functionArguments returns[ArrayList<Expression> args]: {
+        $args = new ArrayList<Expression>();
+    } (e1=expression {
+        $args.add($e1.exp);
+    } (COMMA e2=expression {
+        $args.add($e2.exp);
+    })*)?;
+
+//todo
+body returns[BlockStmt bodystmt]:
+     (blockStatement | (NEWLINE+ singleStatement (SEMICOLON)?));
+
+//todo
+loopCondBody returns[BlockStmt loopCond]:
+     (blockStatement | (NEWLINE+ singleStatement ));
+
+//todo
+blockStatement :
+    BEGIN (NEWLINE+ (singleStatement SEMICOLON)* singleStatement (SEMICOLON)?)+ NEWLINE+ END;
+
+//todo
+varDecStatement :
+    type identifier (ASSIGN orExpression )? (COMMA identifier (ASSIGN orExpression)? )*;
+
+//todo
+functionCallStmt :
+     otherExpression ((LPAR functionArguments RPAR) | (DOT identifier))* (LPAR functionArguments RPAR);
+
+//todo
+returnStatement :
+    RETURN (expression)?;
+
+//todo
+ifStatement returns[ConditionalStmt ifStmt]:
+    ifLine = IF
+    ex1 = expression
+//    {
+//        $ifStmt = new ConditionalStmt($ex1.exp);
+//        $ifStmt.setLine($ifLine.getLine());
+//    }
+    (loopCondBody | body elseStatement);
+
+//todo
+elseStatement returns [Statement elseStmt] :
+     NEWLINE*
+     elseLine = ELSE lpcond = loopCondBody
+     {
+//        $elseStmt = $lpcond.loopCond;
+//        $elseStmt.setLine($elseLine.getLine());
+     };
+>>>>>>> ec5215cd4008bc58a9475921e85b0d300d056675
 
 functionCallStmt returns[Statement stmt]:
     e=otherExpression {
@@ -127,6 +180,7 @@ functionCallStmt returns[Statement stmt]:
         $stmt.setLine($LPAR.line);
     };
 
+<<<<<<< HEAD
 returnStatement returns[Statement stmt]:
     RETURN {$stmt = new ReturnStmt();}
     (expression {$stmt.setReturnedExpr($expression.exp);})?;
@@ -182,6 +236,57 @@ singleStatement returns[Statement stmt]:
     loopStatement {$stmt = $loopStatement.stmt;} |
     append {$stmt = new ListAppendStmt($append.exp);} |
     size {$stmt = new ListSizeStmt($size.exp);};
+=======
+//not sure for while condition
+whileLoopStatement returns[LoopStmt whilestmt]:
+    whLine = WHILE ex1 = expression lpbdy = loopCondBody
+    {
+        $whilestmt = new LoopStmt();
+//        ConditionalStmt cond1 = new ConditionalStmt($ex1.exp);
+        $whilestmt.setCondition($ex1.exp);
+        $whilestmt.setBody($lpbdy.loopCond);
+        $whilestmt.setLine($whLine.getLine());
+    };
+
+
+doWhileLoopStatement returns[LoopStmt dowhile]:
+    doLine = DO bd1 = body
+    {
+        $dowhile = new LoopStmt();
+        $dowhile.setBody($bd1.bodystmt);
+        $dowhile.setLine($doLine.getLine());
+    }
+    NEWLINE*
+    whLine = WHILE ex2 = expression
+    {
+//        ConditionalStmt cond1 = new ConditionalStmt($ex2.exp);
+        $dowhile.setCondition($ex2.exp);
+
+    };
+
+
+displayStatement returns [DisplayStmt display] :
+  disLine = DISPLAY LPAR ex1 = expression
+  {
+    $display = new DisplayStmt($ex1.exp);
+    $display.setLine($disLine.getLine());
+  }
+  RPAR;
+
+
+assignmentStatement returns [AssignmentStmt assign]:
+    orexp = orExpression assingLine = ASSIGN ex1 = expression
+    {
+        $assign = new AssignmentStmt($orexp.exp, $ex1.exp);
+        $assign.setLine($assingLine.getLine());
+    };
+
+//todo
+singleStatement :
+// returns [Statement singlestmt]
+    ifStatement | displayStatement | functionCallStmt | returnStatement | assignmentStatement
+    | varDecStatement | loopStatement | append | size;
+>>>>>>> ec5215cd4008bc58a9475921e85b0d300d056675
 
 expression returns[Expression exp]:
     e1=orExpression {
@@ -260,6 +365,7 @@ preUnaryExpression returns[Expression exp]:
     };
 
 accessExpression returns[Expression exp]:
+<<<<<<< HEAD
     otherExpression {$exp = $otherExpression.exp;}
     ((LPAR {
         FunctionCall fc = new FunctionCall($exp);
@@ -288,58 +394,120 @@ otherExpression returns[Expression exp]:
     } |
     size {$exp = $size.exp;} |
     append {$exp = $append.exp;};
+=======
+    e1=otherExpression {
+        $exp = $e1.exp;
+    } ((LPAR args=functionArguments RPAR {
+        $exp = new FunctionCall($exp, $args.args);
+//        $exp.setLine($LPAR.line);
+    }) | (DOT id=identifier {
+        $exp = new StructAccess($exp, $id.ID);
+        $exp.setLine($DOT.line);
+    }))* ((LBRACK e2=expression RBRACK {
+        $exp = new ListAccessByIndex($exp, $e2.exp);
+//        $exp.setLine($LBRACK.line);
+    }) | (DOT id=identifier {
+        $exp = new StructAccess($exp, $id.ID);
+        $exp.setLine($DOT.line);
+    }))*;
+
+otherExpression returns[Expression exp]:
+    e1=value {
+        $exp = $e1.val;
+    } | e2=identifier {
+        $exp = $e2.ID;
+    } | LPAR (args=functionArguments) RPAR {
+        $exp = new ExprInPar($args.args);
+//        $exp.setLine($LPAR.line);
+    } | size {
+        $exp = $size.exp;
+    } | append {
+        $exp = $append.exp;
+    };
+>>>>>>> ec5215cd4008bc58a9475921e85b0d300d056675
 
 size returns[Expression exp]:
-    SIZE LPAR e1=expression RPAR {
+    sizeLine = SIZE LPAR e1=expression RPAR {
         $exp = new ListSize($e1.exp);
-        $exp.setLine($LPAR.line);
+        $exp.setLine($sizeLine.line);
     };
 
 append returns[Expression exp]:
-    APPEND LPAR e1=expression COMMA e2=expression RPAR
+    appendLine = APPEND LPAR e1=expression COMMA e2=expression RPAR
     {
         $exp = new ListAppend($e1.exp, $e2.exp);
-        $exp.setLine($APPEND.line);
+        $exp.setLine($appendLine.getLine());
     };
 
 value returns[Value val]:
-    b=boolValue {$val = $b.val;} |
-    i=INT_VALUE {$val = new IntValue(Integer.parseInt($i.text));};
+    b=boolValue {$val = $b.boolVal;} |
+    i=INT_VALUE
+    {
+        $val = new IntValue(Integer.parseInt($i.text));
+        $val.setLine($i.getLine());
+    };
 
-boolValue returns[Value val]:
-    TRUE {$val = new BoolValue(true);} |
-    FALSE {$val = new BoolValue(false);};
+boolValue returns[Value boolVal]:
+    trueLine = TRUE
+    {
+        $boolVal = new BoolValue(true);
+        $boolVal.setLine($trueLine.getLine());
+    } |
+    falseLine = FALSE
+    {
+        $boolVal = new BoolValue(false);
+        $boolVal.setLine($falseLine.getLine());
+    };
 
 identifier returns[Identifier ID]:
-    name=IDENTIFIER {$ID = new Identifier($name.text);};
+    name=IDENTIFIER
+    {
+    $ID = new Identifier($name.text);
+    $ID.setLine($name.getLine());
+    };
 
 type returns[Type varType]:
     INT {$varType = new IntType();} |
     BOOL {$varType = new BoolType();} |
+<<<<<<< HEAD
     LIST SHARP type {$varType = new ListType($type.varType);} |
     STRUCT identifier {$varType = new StructType($identifier.ID);} |
     fptrType {$varType = $fptrType.fptr;};
+=======
+    LIST SHARP listType=type {$varType = new ListType($listType.varType);} |
+    STRUCT structID=identifier {$varType = new StructType($structID.ID);} |
+    fptr=fptrType {$varType = $fptr.fptype;};
+>>>>>>> ec5215cd4008bc58a9475921e85b0d300d056675
 
-fptrType returns[Type fptr]:
+
+fptrType returns[FptrType fptype] locals[ArrayList<Type> Ltype]:
+    (FPTR
     {
-        ArrayList<Type> argsType = new ArrayList<Type>();
-        Type retType;
+        $Ltype = new ArrayList<>();
     }
-    FPTR LESS_THAN (VOID {
-        Type vt = new VoidType();
-        argsType.add(vt);
-    } | (firstType=type {
-        argsType.add($firstType.varType);
-    } (COMMA tp=type {
-        argsType.add($tp.varType);
-    })*)) ARROW (retType=type {
-        retType = $retType.varType;
-    } | retVoid=VOID {
-        retType = new VoidType();
-    }) GREATER_THAN
+    (LESS_THAN (VOID
     {
-        $fptr = new FptrType(argsType, retType);
-    };
+        VoidType vid = new VoidType();
+        $Ltype.add(vid);
+    }
+     | (t1 = type
+     {
+        $Ltype.add($t1.varType);
+     }
+     (COMMA t2 = type
+     {
+        $Ltype.add($t2.varType);
+     }
+     )*)) ARROW (
+     t3 = type
+          {
+             $fptype = new FptrType($Ltype, $t3.varType);
+          }
+          | VOID
+          {
+            VoidType vd = new VoidType();
+             $fptype = new FptrType($Ltype, vd);
+          }) GREATER_THAN));
 
 MAIN: 'main';
 RETURN: 'return';
