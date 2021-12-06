@@ -3384,7 +3384,7 @@ public class CmmParser extends Parser {
 				{
 				setState(502);
 				((ValueContext)_localctx).b = boolValue();
-				_localctx.val = bv.val
+				_localctx.val = b.val
 				}
 				break;
 			case INT_VALUE:

@@ -171,7 +171,7 @@ append :
     APPEND LPAR expression COMMA expression RPAR;
 
 value returns[Value val]:
-    b=boolValue {$val = bv.val} |
+    b=boolValue {$val = b.val} |
     i=INT_VALUE {$val = new IntValue(Integer.parseInt($i.text))};
 
 boolValue returns[Value val]:
