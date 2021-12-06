@@ -243,47 +243,72 @@ append returns[Expression exp]:
     APPEND LPAR e1=expression COMMA e2=expression RPAR
     {
         $exp = new ListAppend($e1.exp, $e2.exp);
-        $exp.setLine($APPEND.line);
+        $exp.setLine($APPEND.getLine());
     };
 
 value returns[Value val]:
-    b=boolValue {$val = $b.val;} |
-    i=INT_VALUE {$val = new IntValue(Integer.parseInt($i.text));};
+    b=boolValue {$val = $b.boolVal;} |
+    i=INT_VALUE
+    {
+        $val = new IntValue(Integer.parseInt($i.text));
+        $val.setLine($i.getLine());
+    };
 
-boolValue returns[Value val]:
-    TRUE {$val = new BoolValue(true);} |
-    FALSE {$val = new BoolValue(false);};
+boolValue returns[Value boolVal]:
+    trueLine = TRUE
+    {
+        $boolVal = new BoolValue(true);
+        $boolVal.setLine($trueLine.getLine());
+    } |
+    falseLine = FALSE
+    {
+        $boolVal = new BoolValue(false);
+        $boolVal.setLine($falseLine.getLine());
+    };
 
 identifier returns[Identifier ID]:
-    name=IDENTIFIER {$ID = new Identifier($name.text);};
+    name=IDENTIFIER
+    {
+    $ID = new Identifier($name.text);
+    $ID.setLine($name.getLine());
+    };
 
 type returns[Type varType]:
     INT {$varType = new IntType();} |
     BOOL {$varType = new BoolType();} |
     LIST SHARP listType=type {$varType = new ListType($listType.varType);} |
     STRUCT structID=identifier {$varType = new StructType($structID.ID);} |
-    fptr=fptrType {$varType = $fptr.fptr;};
+    fptr=fptrType {$varType = $fptr.fptype;};
 
-fptrType returns[Type fptr]:
+
+fptrType returns[FptrType fptype] locals[ArrayList<Type> Ltype]:
+    (FPTR
     {
-        ArrayList<Type> argsType = new ArrayList<Type>();
-        Type retType;
+        $Ltype = new ArrayList<>();
     }
-    FPTR LESS_THAN (VOID {
-        Type vt = new VoidType();
-        argsType.add(vt);
-    } | (firstType=type {
-        argsType.add($firstType.varType);
-    } (COMMA tp=type {
-        argsType.add($tp.varType);
-    })*)) ARROW (retType=type {
-        retType = $retType.varType;
-    } | retVoid=VOID {
-        retType = new VoidType();
-    }) GREATER_THAN
+    (LESS_THAN (VOID
     {
-        $fptr = new FptrType(argsType, retType);
-    };
+        VoidType vid = new VoidType();
+        $Ltype.add(vid);
+    }
+     | (t1 = type
+     {
+        $Ltype.add($t1.varType);
+     }
+     (COMMA t2 = type
+     {
+        $Ltype.add($t2.varType);
+     }
+     )*)) ARROW (
+     t3 = type
+          {
+             $fptype = new FptrType($Ltype, $t3.varType);
+          }
+          | VOID
+          {
+            VoidType vd = new VoidType();
+             $fptype = new FptrType($Ltype, vd);
+          }) GREATER_THAN));
 
 MAIN: 'main';
 RETURN: 'return';
