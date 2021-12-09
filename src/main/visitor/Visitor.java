@@ -9,18 +9,13 @@ import main.ast.nodes.statement.*;
 import main.ast.types.Type;
 import main.symbolTable.SymbolTable;
 import main.symbolTable.exceptions.ItemAlreadyExistsException;
-import main.symbolTable.items.FunctionSymbolTableItem;
-import main.symbolTable.items.StructSymbolTableItem;
-import main.symbolTable.items.SymbolTableItem;
-import main.symbolTable.items.VariableSymbolTableItem;
+import main.symbolTable.items.*;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.function.Function;
 
 public class Visitor<T> implements IVisitor<T> {
-
-    private static int ItemDecIndex = 1;
-
     public static void createNewSymbolTable() {
         SymbolTable.push(new SymbolTable(SymbolTable.top));
     }
@@ -28,7 +23,6 @@ public class Visitor<T> implements IVisitor<T> {
     public SymbolTableItem createVarDecSymbolItem(VariableDeclaration varDeclaration) {
         VariableSymbolTableItem varDec = new VariableSymbolTableItem(varDeclaration.getVarName());
         varDec.setType(varDeclaration.getVarType());
-        Visitor.ItemDecIndex += 1;
         return ((SymbolTableItem) varDec);
     }
 
@@ -42,6 +36,20 @@ public class Visitor<T> implements IVisitor<T> {
         return ((SymbolTableItem) structDec);
     }
 
+    public SymbolTableItem createNoItemSymbolTableItem(Identifier id) {
+        NoItemSymbolTableItem noItem = new NoItemSymbolTableItem(id);
+        return ((SymbolTableItem) noItem);
+    }
+
+    public SymbolTableItem createIdentifierSymbolTableItem(Identifier id) {
+        return new SymbolTableItem() {
+            @Override
+            public String getKey() {
+                return id.getName();
+            }
+        };
+    }
+
     public void putToSymbolTable(SymbolTableItem item) {
         try {
             SymbolTable.top.put(item);
@@ -49,6 +57,7 @@ public class Visitor<T> implements IVisitor<T> {
             System.out.println("____ ItemAlreadyExistsException.");
         }
     }
+
 
     @Override
     public T visit(Program program) {

@@ -8,39 +8,42 @@ import main.ast.nodes.expression.values.primitive.*;
 import main.ast.nodes.statement.*;
 import main.symbolTable.SymbolTable;
 import main.symbolTable.exceptions.ItemAlreadyExistsException;
+import main.symbolTable.items.SymbolTableItem;
 import main.visitor.*;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 public class ASTTreePrinter extends Visitor<Void> {
+
     public void messagePrinter(int line, String message) {
         System.out.println("Line " + line + ": " + message);
     }
 
     @Override
     public Void visit(Program program) {
-        createNewSymbolTable();
         messagePrinter(program.getLine(), program.toString());
+        createNewSymbolTable();
         ArrayList<StructDeclaration> structs = program.getStructs();
         for (StructDeclaration struct : structs) {
+            try {
+                SymbolTable.top.put(this.createStructDecSymbolTableItem(struct));
+            } catch (ItemAlreadyExistsException error) {
+                messagePrinter(struct.getLine(), "Duplicate struct " + struct.getStructName().getName());
+            }
+            try {
+                SymbolTable.top.put(this.createNoItemSymbolTableItem(struct.getStructName()));
+            } catch (ItemAlreadyExistsException error) {
+                //messagePrinter(struct.getLine(), "Duplicate struct " + struct.getStructName().getName());
+            }
             struct.accept(this);
         }
         ArrayList<FunctionDeclaration> functions = program.getFunctions();
-        for (FunctionDeclaration function : functions) function.accept(this);
-
+        for (FunctionDeclaration function : functions) {
+            function.accept(this);
+        }
         MainDeclaration main = program.getMain();
         main.accept(this);
-        ArrayList<Boolean> structDecIsValid = new ArrayList<Boolean>();
-        for (int i = 0; i < structs.size(); i++) {
-            try {
-                SymbolTable.top.put(this.createStructDecSymbolTableItem(structs.get(i)));
-                structDecIsValid.add(true);
-            } catch (ItemAlreadyExistsException error) {
-                messagePrinter(structs.get(i).getLine(), "Duplicate struct " + structs.get(i).getStructName().getName());
-                structDecIsValid.add(false);
-            }
-        }
         return null;
     }
 
@@ -48,12 +51,24 @@ public class ASTTreePrinter extends Visitor<Void> {
     public Void visit(FunctionDeclaration functionDec) {
         messagePrinter(functionDec.getLine(), functionDec.toString());
 
+        try {
+            SymbolTable.top.put(this.createFunctionDecSymbolTableItem(functionDec));
+        } catch (ItemAlreadyExistsException error) {
+            messagePrinter(functionDec.getLine(), "Duplicate function " + functionDec.getFunctionName().getName());
+        }
+        try {
+            SymbolTable.top.put(this.createNoItemSymbolTableItem(functionDec.getFunctionName()));
+        } catch (ItemAlreadyExistsException error) {
+            messagePrinter(functionDec.getLine(), "Name of function " + functionDec.getFunctionName().getName() + " conflicts with a struct’s name");
+        }
+
         return null;
     }
 
     @Override
     public Void visit(MainDeclaration mainDec) {
         messagePrinter(mainDec.getLine(), mainDec.toString());
+        mainDec.getBody().accept(new Visitor<>());
         return null;
     }
 
@@ -72,133 +87,133 @@ public class ASTTreePrinter extends Visitor<Void> {
 
     @Override
     public Void visit(SetGetVarDeclaration setGetVarDec) {
-        //todo
+        messagePrinter(setGetVarDec.getLine(), setGetVarDec.toString());
         return null;
     }
 
     @Override
     public Void visit(AssignmentStmt assignmentStmt) {
-        //todo
+        messagePrinter(assignmentStmt.getLine(), assignmentStmt.toString());
         return null;
     }
 
     @Override
     public Void visit(BlockStmt blockStmt) {
-        //todo
+        messagePrinter(blockStmt.getLine(), blockStmt.toString());
         return null;
     }
 
     @Override
     public Void visit(ConditionalStmt conditionalStmt) {
-        //todo
+        messagePrinter(conditionalStmt.getLine(), conditionalStmt.toString());
         return null;
     }
 
     @Override
     public Void visit(FunctionCallStmt functionCallStmt) {
-        //todo
+        messagePrinter(functionCallStmt.getLine(), functionCallStmt.toString());
         return null;
     }
 
     @Override
     public Void visit(DisplayStmt displayStmt) {
-        //todo
+        messagePrinter(displayStmt.getLine(), displayStmt.toString());
         return null;
     }
 
     @Override
     public Void visit(ReturnStmt returnStmt) {
-        //todo
+        messagePrinter(returnStmt.getLine(), returnStmt.toString());
         return null;
     }
 
     @Override
     public Void visit(LoopStmt loopStmt) {
-        //todo
+        messagePrinter(loopStmt.getLine(), loopStmt.toString());
         return null;
     }
 
     @Override
     public Void visit(VarDecStmt varDecStmt) {
-        //todo
+        messagePrinter(varDecStmt.getLine(), varDecStmt.toString());
         return null;
     }
 
     @Override
     public Void visit(ListAppendStmt listAppendStmt) {
-        //todo
+        messagePrinter(listAppendStmt.getLine(), listAppendStmt.toString());
         return null;
     }
 
     @Override
     public Void visit(ListSizeStmt listSizeStmt) {
-        //todo
+        messagePrinter(listSizeStmt.getLine(), listSizeStmt.toString());
         return null;
     }
 
     @Override
     public Void visit(BinaryExpression binaryExpression) {
-        //todo
+        messagePrinter(binaryExpression.getLine(), binaryExpression.toString());
         return null;
     }
 
     @Override
     public Void visit(UnaryExpression unaryExpression) {
-        //todo
+        messagePrinter(unaryExpression.getLine(), unaryExpression.toString());
         return null;
     }
 
     @Override
     public Void visit(FunctionCall funcCall) {
-        //todo
+        messagePrinter(funcCall.getLine(), funcCall.toString());
         return null;
     }
 
     @Override
     public Void visit(Identifier identifier) {
-        //todo
+        messagePrinter(identifier.getLine(), identifier.toString());
         return null;
     }
 
     @Override
     public Void visit(ListAccessByIndex listAccessByIndex) {
-        //todo
+        messagePrinter(listAccessByIndex.getLine(), listAccessByIndex.toString());
         return null;
     }
 
     @Override
     public Void visit(StructAccess structAccess) {
-        //todo
+        messagePrinter(structAccess.getLine(), structAccess.toString());
         return null;
     }
 
     @Override
     public Void visit(ListSize listSize) {
-        //todo
+        messagePrinter(listSize.getLine(), listSize.toString());
         return null;
     }
 
     @Override
     public Void visit(ListAppend listAppend) {
-        //todo
+        messagePrinter(listAppend.getLine(), listAppend.toString());
         return null;
     }
 
     @Override
     public Void visit(ExprInPar exprInPar) {
-        //todo
+        messagePrinter(exprInPar.getLine(), exprInPar.toString());
         return null;
     }
 
     @Override
     public Void visit(IntValue intValue) {
-        //todo
+        messagePrinter(intValue.getLine(), intValue.toString());
         return null;
     }
 
     @Override
     public Void visit(BoolValue boolValue) {
-        //todo
+        messagePrinter(boolValue.getLine(), boolValue.toString());
         return null;
     }
 }
