@@ -6,45 +6,67 @@ import main.ast.nodes.declaration.struct.*;
 import main.ast.nodes.expression.*;
 import main.ast.nodes.expression.values.primitive.*;
 import main.ast.nodes.statement.*;
+import main.symbolTable.SymbolTable;
+import main.symbolTable.exceptions.ItemAlreadyExistsException;
 import main.visitor.*;
 
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+
 public class ASTTreePrinter extends Visitor<Void> {
-    public void messagePrinter(int line, String message){
+    public void messagePrinter(int line, String message) {
         System.out.println("Line " + line + ": " + message);
     }
 
     @Override
     public Void visit(Program program) {
+        createNewSymbolTable();
         messagePrinter(program.getLine(), program.toString());
-        for (StructDeclaration structDeclaration: program.getStructs())
-            structDeclaration.accept(this);
-        for (FunctionDeclaration functionDeclaration:program.getFunctions())
-            functionDeclaration.accept(this);
-        program.getMain().accept(this);
+        ArrayList<StructDeclaration> structs = program.getStructs();
+        for (StructDeclaration struct : structs) {
+            struct.accept(this);
+        }
+        ArrayList<FunctionDeclaration> functions = program.getFunctions();
+        for (FunctionDeclaration function : functions) function.accept(this);
+
+        MainDeclaration main = program.getMain();
+        main.accept(this);
+        ArrayList<Boolean> structDecIsValid = new ArrayList<Boolean>();
+        for (int i = 0; i < structs.size(); i++) {
+            try {
+                SymbolTable.top.put(this.createStructDecSymbolTableItem(structs.get(i)));
+                structDecIsValid.add(true);
+            } catch (ItemAlreadyExistsException error) {
+                messagePrinter(structs.get(i).getLine(), "Duplicate struct " + structs.get(i).getStructName().getName());
+                structDecIsValid.add(false);
+            }
+        }
         return null;
     }
 
     @Override
     public Void visit(FunctionDeclaration functionDec) {
-        //todo
+        messagePrinter(functionDec.getLine(), functionDec.toString());
+
         return null;
     }
 
     @Override
     public Void visit(MainDeclaration mainDec) {
-        //todo
+        messagePrinter(mainDec.getLine(), mainDec.toString());
         return null;
     }
 
     @Override
     public Void visit(VariableDeclaration variableDec) {
-        //todo
+        messagePrinter(variableDec.getLine(), variableDec.toString());
+
         return null;
     }
 
     @Override
     public Void visit(StructDeclaration structDec) {
-        //todo
+        messagePrinter(structDec.getLine(), structDec.toString());
         return null;
     }
 

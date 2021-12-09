@@ -6,8 +6,49 @@ import main.ast.nodes.declaration.struct.StructDeclaration;
 import main.ast.nodes.expression.*;
 import main.ast.nodes.expression.values.primitive.*;
 import main.ast.nodes.statement.*;
+import main.ast.types.Type;
+import main.symbolTable.SymbolTable;
+import main.symbolTable.exceptions.ItemAlreadyExistsException;
+import main.symbolTable.items.FunctionSymbolTableItem;
+import main.symbolTable.items.StructSymbolTableItem;
+import main.symbolTable.items.SymbolTableItem;
+import main.symbolTable.items.VariableSymbolTableItem;
+
+import java.util.ArrayList;
+import java.util.function.Function;
 
 public class Visitor<T> implements IVisitor<T> {
+
+    private static int ItemDecIndex = 1;
+
+    public static void createNewSymbolTable() {
+        SymbolTable.push(new SymbolTable(SymbolTable.top));
+    }
+
+    public SymbolTableItem createVarDecSymbolItem(VariableDeclaration varDeclaration) {
+        VariableSymbolTableItem varDec = new VariableSymbolTableItem(varDeclaration.getVarName());
+        varDec.setType(varDeclaration.getVarType());
+        Visitor.ItemDecIndex += 1;
+        return ((SymbolTableItem) varDec);
+    }
+
+    public SymbolTableItem createFunctionDecSymbolTableItem(FunctionDeclaration funcDeclaration) {
+        FunctionSymbolTableItem funcDec = new FunctionSymbolTableItem(funcDeclaration);
+        return ((SymbolTableItem) funcDec);
+    }
+
+    public SymbolTableItem createStructDecSymbolTableItem(StructDeclaration structDeclaration) {
+        StructSymbolTableItem structDec = new StructSymbolTableItem(structDeclaration);
+        return ((SymbolTableItem) structDec);
+    }
+
+    public void putToSymbolTable(SymbolTableItem item) {
+        try {
+            SymbolTable.top.put(item);
+        } catch (ItemAlreadyExistsException error) {
+            System.out.println("____ ItemAlreadyExistsException.");
+        }
+    }
 
     @Override
     public T visit(Program program) {

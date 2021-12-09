@@ -6,7 +6,7 @@ import main.ast.types.*;
 import main.visitor.*;
 
 //line -> IDENTIFIER
-public class VariableDeclaration extends Declaration{
+public class VariableDeclaration extends Declaration {
     private Identifier varName;
     private Type varType;
     private Expression defaultValue;

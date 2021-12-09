@@ -1,5 +1,8 @@
 package main;
 
+import main.symbolTable.SymbolTable;
+import main.visitor.Visitor;
+import main.visitor.name.ASTTreePrinter;
 import parsers.*;
 import main.ast.nodes.Program;
 import org.antlr.v4.runtime.CharStream;
@@ -13,6 +16,7 @@ public class CmmCompiler {
 
         Program program = cmmParser.cmm().cmmProgram;
 
-        //todo
+        Visitor v = new ASTTreePrinter();
+        program.accept(v);
     }
 }
