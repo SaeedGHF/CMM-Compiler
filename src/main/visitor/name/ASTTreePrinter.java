@@ -8,6 +8,8 @@ import main.ast.nodes.expression.values.primitive.*;
 import main.ast.nodes.statement.*;
 import main.symbolTable.SymbolTable;
 import main.symbolTable.exceptions.ItemAlreadyExistsException;
+import main.symbolTable.exceptions.ItemNotFoundException;
+import main.symbolTable.items.NoItemSymbolTableItem;
 import main.symbolTable.items.SymbolTableItem;
 import main.visitor.*;
 
@@ -22,20 +24,10 @@ public class ASTTreePrinter extends Visitor<Void> {
 
     @Override
     public Void visit(Program program) {
-        messagePrinter(program.getLine(), program.toString());
+        //messagePrinter(program.getLine(), program.toString());
         createNewSymbolTable();
         ArrayList<StructDeclaration> structs = program.getStructs();
         for (StructDeclaration struct : structs) {
-            try {
-                SymbolTable.top.put(this.createStructDecSymbolTableItem(struct));
-            } catch (ItemAlreadyExistsException error) {
-                messagePrinter(struct.getLine(), "Duplicate struct " + struct.getStructName().getName());
-            }
-            try {
-                SymbolTable.top.put(this.createNoItemSymbolTableItem(struct.getStructName()));
-            } catch (ItemAlreadyExistsException error) {
-                //messagePrinter(struct.getLine(), "Duplicate struct " + struct.getStructName().getName());
-            }
             struct.accept(this);
         }
         ArrayList<FunctionDeclaration> functions = program.getFunctions();
@@ -44,13 +36,14 @@ public class ASTTreePrinter extends Visitor<Void> {
         }
         MainDeclaration main = program.getMain();
         main.accept(this);
+        SymbolTable.pop();
         return null;
     }
 
     @Override
     public Void visit(FunctionDeclaration functionDec) {
-        messagePrinter(functionDec.getLine(), functionDec.toString());
-
+        //messagePrinter(functionDec.getLine(), functionDec.toString());
+        createNewSymbolTable();
         try {
             SymbolTable.top.put(this.createFunctionDecSymbolTableItem(functionDec));
         } catch (ItemAlreadyExistsException error) {
@@ -61,33 +54,53 @@ public class ASTTreePrinter extends Visitor<Void> {
         } catch (ItemAlreadyExistsException error) {
             messagePrinter(functionDec.getLine(), "Name of function " + functionDec.getFunctionName().getName() + " conflicts with a struct’s name");
         }
-
+        ArrayList<VariableDeclaration> args = functionDec.getArgs();
+        for (int i = 0; i < args.size(); i++) {
+            args.get(i).accept(this);
+        }
+        functionDec.getBody().accept(this);
+        SymbolTable.pop();
         return null;
     }
 
     @Override
     public Void visit(MainDeclaration mainDec) {
-        messagePrinter(mainDec.getLine(), mainDec.toString());
-        mainDec.getBody().accept(new Visitor<>());
+        //messagePrinter(mainDec.getLine(), mainDec.toString());
+        mainDec.getBody().accept(this);
         return null;
     }
 
     @Override
     public Void visit(VariableDeclaration variableDec) {
-        messagePrinter(variableDec.getLine(), variableDec.toString());
-
+        //messagePrinter(variableDec.getLine(), variableDec.toString());
+        try {
+            SymbolTable.top.put(this.createVarDecSymbolItem(variableDec));
+        } catch (ItemAlreadyExistsException error) {
+            messagePrinter(variableDec.getVarName().getLine(), "Variable " + variableDec.getVarName().getName() + " is already declared");
+        }
         return null;
     }
 
     @Override
     public Void visit(StructDeclaration structDec) {
-        messagePrinter(structDec.getLine(), structDec.toString());
+        //messagePrinter(structDec.getLine(), structDec.toString());
+        try {
+            SymbolTable.top.put(this.createStructDecSymbolTableItem(structDec));
+        } catch (ItemAlreadyExistsException error) {
+            messagePrinter(structDec.getLine(), "Duplicate struct " + structDec.getStructName().getName());
+        }
+        try {
+            SymbolTable.top.put(this.createNoItemSymbolTableItem(structDec.getStructName()));
+        } catch (ItemAlreadyExistsException error) {
+            //messagePrinter(struct.getLine(), "Duplicate struct " + struct.getStructName().getName());
+        }
         return null;
     }
 
     @Override
     public Void visit(SetGetVarDeclaration setGetVarDec) {
-        messagePrinter(setGetVarDec.getLine(), setGetVarDec.toString());
+        //messagePrinter(setGetVarDec.getLine(), setGetVarDec.toString());
+
         return null;
     }
 
@@ -100,6 +113,7 @@ public class ASTTreePrinter extends Visitor<Void> {
     @Override
     public Void visit(BlockStmt blockStmt) {
         messagePrinter(blockStmt.getLine(), blockStmt.toString());
+
         return null;
     }
 

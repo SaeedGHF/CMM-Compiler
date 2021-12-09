@@ -11,11 +11,15 @@ import main.symbolTable.SymbolTable;
 import main.symbolTable.exceptions.ItemAlreadyExistsException;
 import main.symbolTable.items.*;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.function.Function;
 
 public class Visitor<T> implements IVisitor<T> {
+    private HashMap<String, SymbolTable> allStructsSymbolTable = new HashMap<String, SymbolTable>();
+    private HashMap<String, SymbolTable> allFunctionsSymbolTable = new HashMap<String, SymbolTable>();
+
     public static void createNewSymbolTable() {
         SymbolTable.push(new SymbolTable(SymbolTable.top));
     }
@@ -39,15 +43,6 @@ public class Visitor<T> implements IVisitor<T> {
     public SymbolTableItem createNoItemSymbolTableItem(Identifier id) {
         NoItemSymbolTableItem noItem = new NoItemSymbolTableItem(id);
         return ((SymbolTableItem) noItem);
-    }
-
-    public SymbolTableItem createIdentifierSymbolTableItem(Identifier id) {
-        return new SymbolTableItem() {
-            @Override
-            public String getKey() {
-                return id.getName();
-            }
-        };
     }
 
     public void putToSymbolTable(SymbolTableItem item) {
