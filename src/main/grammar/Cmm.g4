@@ -110,9 +110,11 @@ functionArgsDec returns[ArrayList<VariableDeclaration> args]:
     {ArrayList<VariableDeclaration> a = new ArrayList<VariableDeclaration>();}
     LPAR (type identifier {
         VariableDeclaration dec = new VariableDeclaration($identifier.ID, $type.varType);
+        dec.setLine($identifier.ID.getLine());
         a.add(dec);
     } (COMMA type identifier {
         VariableDeclaration dec_ = new VariableDeclaration($identifier.ID, $type.varType);
+        dec_.setLine($identifier.ID.getLine());
         a.add(dec_);
     })*)? RPAR {
         $args = a;

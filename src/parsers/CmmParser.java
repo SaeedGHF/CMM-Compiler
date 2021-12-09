@@ -1176,6 +1176,7 @@ public class CmmParser extends Parser {
 				((FunctionArgsDecContext)_localctx).identifier = identifier();
 
 				        VariableDeclaration dec = new VariableDeclaration(((FunctionArgsDecContext)_localctx).identifier.ID, ((FunctionArgsDecContext)_localctx).type.varType);
+				        dec.setLine(((FunctionArgsDecContext)_localctx).identifier.ID.getLine());
 				        a.add(dec);
 				    
 				setState(261);
@@ -1192,6 +1193,7 @@ public class CmmParser extends Parser {
 					((FunctionArgsDecContext)_localctx).identifier = identifier();
 
 					        VariableDeclaration dec_ = new VariableDeclaration(((FunctionArgsDecContext)_localctx).identifier.ID, ((FunctionArgsDecContext)_localctx).type.varType);
+					        dec_.setLine(((FunctionArgsDecContext)_localctx).identifier.ID.getLine());
 					        a.add(dec_);
 					    
 					}
