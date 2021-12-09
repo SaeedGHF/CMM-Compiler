@@ -1,4 +1,4 @@
-// Generated from /home/tanin/MYgit/CMM-Compiler/src/main/grammar/Cmm.g4 by ANTLR 4.9.2
+// Generated from F:/Phase2/src/main/grammar\Cmm.g4 by ANTLR 4.9.2
 package parsers;
 
      import main.ast.nodes.*;
